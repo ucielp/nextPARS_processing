@@ -7,6 +7,7 @@ matplotlib.style.use('ggplot')
 from string import ascii_letters
 import seaborn as sns
 import os.path
+from pathlib import Path
 import itertools    
 import re
 import os
@@ -79,13 +80,14 @@ def plot_correlation_matrix(dataframe,MOLECULE):
 	sns.heatmap(corr, mask=mask, cmap=cmap, vmax=1,vmin=-1, center=0,
 				square=True, linewidths=.5, cbar_kws={"shrink": .5},annot=True)
 	
-	output_file = 'plot_NORAD/' + MOLECULE + '.pdf'
+	output_file = dir_pattern_plot + MOLECULE + '.pdf'
 	figure = ax.get_figure()    
 	figure.savefig(output_file, dpi=400)
 	figure.clf()
-	figure.clf()
 	
 	plt.close(f)
+	plt.close('all')
+	
 
 def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	
@@ -114,7 +116,7 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 
 	# Default regular plot
 	df.boxplot(by='type',column=list(BigWigFile_list), grid = False,figsize=(12,9))
-	pdf_out = 'plot_NORAD/' + MOLECULE + '_boxplot.pdf'
+	pdf_out = dir_pattern_plot + MOLECULE + '_boxplot.pdf'
 	plt.savefig(pdf_out, dpi=800)
 	plt.clf()
 	
@@ -132,7 +134,7 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	# ~ all_p = list()
 
 	# ~ for case in range(len(BigWigFile_list)):
-		# ~ sub_df = df_long[df_long.Feature == BigWigFile_list[case]]
+		# ~ sub_df = df_long[df_long.Feature == BigWigFile_list[ca471se]]
 		# ~ g1 = sub_df[sub_df['type'] == 'NRU_patt']['Value'].values
 		# ~ g2 = sub_df[sub_df['type'] == 'all']['Value'].values
 		
@@ -213,11 +215,11 @@ def plot_box_plot_final(df_pos,df_phastCons_all,name,fields):
 	
 	df.boxplot(by='type',column=list(fields), grid = False,figsize=(12,9))
 	
-	pdf_out = 'plot_NORAD/' + name + '_boxplot.pdf'
+	pdf_out = dir_pattern_plot + name + '_boxplot.pdf'
 	plt.savefig(pdf_out, dpi=800)
 	plt.clf()
 	
-	save = 'out_NORAD/' + name + '_boxplot.csv'
+	save = dir_pattern_csv + name + '_boxplot.csv'
 	df.to_csv(save,index=False)
 	
 def plot_box_plot_final_field(df_pos,df_neg,name,fields):
@@ -225,10 +227,7 @@ def plot_box_plot_final_field(df_pos,df_neg,name,fields):
 	# Figure
 	sns.set_style("whitegrid") 
 	
-	
-	# ~ print("pos",df_pos)
-	# ~ print("neg",df_neg)
-	
+
 	####
 	## PhastCons 
 	
@@ -248,11 +247,11 @@ def plot_box_plot_final_field(df_pos,df_neg,name,fields):
 	df = pd.concat(frames,sort=False)
 	df.boxplot(by='type',column=list(fields), grid = False,figsize=(12,9))
 	
-	pdf_out = 'plot_NORAD/' + name + '_boxplot.pdf'
+	pdf_out = dir_pattern_plot + name + '_boxplot.pdf'
 	plt.savefig(pdf_out, dpi=800)
 	plt.clf()
 	
-	save = 'out_NORAD/' + name + '_boxplot.csv'
+	save = dir_pattern_csv + name + '_boxplot.csv'
 	df.to_csv(save,index=False)
 
 
@@ -425,10 +424,10 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			print (final_df.T.corr())
 			
 			# TODO CHECK OUTPUT
-			csv_file = "out_NORAD" + "/"  +  MOLECULE + '_' +  str(st_pos) + "_" + str(end_pos) +  "_UNIT.csv" 
+			csv_file = dir_pattern_csv +  MOLECULE + '_' +  str(st_pos) + "_" + str(end_pos) +  "_UNIT.csv" 
 			final_df.to_csv(csv_file)
 						
-			csv_file = "out_NORAD" + "/"  +  MOLECULE + '_' +  str(st_pos) + "_" + str(end_pos) +  "_UNIT_corr.csv" 
+			csv_file = dir_pattern_csv  +  MOLECULE + '_' +  str(st_pos) + "_" + str(end_pos) +  "_UNIT_corr.csv" 
 			final_df.T.corr().to_csv(csv_file)
 						
 			######################
@@ -465,6 +464,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			negative_col = list()
 			all_col = list(final_df.columns)
 			if pattern:
+							
 				positions_pattern = list()
 				if (not re.findall(pattern, sequence)):
 					print("No pattern was found")
@@ -493,7 +493,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 					df_phastCons_all = pd.concat(df_phastCons_original)
 					
 					# Save to csv # Only pattern positions
-					csv_file = "out_NORAD" + "/"  +  MOLECULE_pos + ".csv" 
+					csv_file = dir_pattern_csv + MOLECULE_pos + ".csv" 
 					df_positive.to_csv(csv_file)
 					df_positive = df_positive.T
 
@@ -563,13 +563,18 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			dup.rename(columns={ dup.columns[5]: "NRU_23" },inplace=True)
 			dup.rename(columns={ dup.columns[6]: "NRU_37" },inplace=True)
 			dup.rename(columns={ dup.columns[7]: "NRU_55" },inplace=True)
-			print(dup)
+			dup.rename(columns={ dup.columns[0]: "NORAD_23" },inplace=True)
+			dup.rename(columns={ dup.columns[1]: "NORAD_37" },inplace=True)
+			dup.rename(columns={ dup.columns[2]: "NORAD_55" },inplace=True)
 		
 
 		df_all_units_positive_corrected  = pd.concat(data_all_units_positive_corrected,sort=False)
 		df_all_units_positive_corrected = df_all_units_positive_corrected.drop(labels='type', axis=1) # axis 1 drops columns, 0 will drop rows that match index value in labels
 
 		name = "all_cons_" + pattern 
+		save = dir_pattern_csv + "all_cons_" + pattern + '.csv'
+		df_all_units_positive_corrected.to_csv(save,index=False)
+	
 		plot_correlation_matrix(df_all_units_positive_corrected.T,name)
 
 temperatures = (23,37,55)
@@ -617,6 +622,16 @@ pattern = 'TAAA' # Sam68
 # ~ pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
 
 
+# Define directories
+dir_pattern = 'out_NORAD/' + pattern + '/'
+Path(dir_pattern).mkdir(parents=True, exist_ok=True)
+
+dir_pattern_csv = dir_pattern + '/csv/'
+Path(dir_pattern_csv).mkdir(parents=True, exist_ok=True)
+
+dir_pattern_plot = dir_pattern + '/plot/'
+Path(dir_pattern_plot).mkdir(parents=True, exist_ok=True)
+				
 stability_pattern(NORAD_units_fasta,temperatures,pattern,st_pos,end_pos,chrName, name, reverse, chrSt, chrEnd,BigWigFile_list)
 
 # TODO: window correlation
