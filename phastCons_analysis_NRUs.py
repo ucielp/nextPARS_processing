@@ -94,19 +94,21 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	
 	df_pos['type'] = 'NRU_patt'
 	
-	df_neg = df_neg.T
+	df_neg = df_neg
 	df_neg['type'] = 'NRU_rest'
 
 
-	df_phastCons_all = df_phastCons_all.T
-	df_phastCons_all.columns=list(BigWigFile_list)
-	df_phastCons_all['type'] = 'all'
-	# Drop first row
-	df_phastCons_all = df_phastCons_all.iloc[1:]
-	
-
-
-	frames = [df_pos, df_neg,df_phastCons_all]
+	if not (df_phastCons_all.empty):
+		df_phastCons_all = df_phastCons_all.T
+		df_phastCons_all.columns=list(BigWigFile_list)
+		df_phastCons_all['type'] = 'all'
+		# Drop first row
+		df_phastCons_all = df_phastCons_all.iloc[1:]
+		
+		frames = [df_pos, df_neg,df_phastCons_all]
+	else:
+		frames = [df_pos, df_neg]
+		
 	df = pd.concat(frames,sort=False)
 
 
@@ -119,8 +121,8 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	
 	# TODO: Check this
 	# Plot with statistics
-	frames = [df_pos, df_phastCons_all]
-	df = pd.concat(frames,sort=False)
+	# ~ frames = [df_pos, df_phastCons_all]
+	# ~ df = pd.concat(frames,sort=False)
 
 	# Plot with Statistics
 	# ~ from scipy import stats
@@ -181,30 +183,78 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	# ~ plt.show()
 		
 
-def plot_box_plot_final(df_pos,df_phastCons_all,name,BigWig_no_path):
+def plot_box_plot_final(df_pos,df_phastCons_all,name,fields):
 	
 	# Figure
 	sns.set_style("whitegrid") 
 	
-	df_pos['type'] = 'NRU_patt'
+	
+	####
+	## PhastCons 
+	
+	# Set values for phastCons and phyloP
+	df_pos_cons = df_pos[fields]
+	df_pos_cons['type'] = 'NRU_patt'
+	
 
+	# Set values for phastCons and phyloP
 	df_phastCons_all = df_phastCons_all.T
-	df_phastCons_all.columns=list(BigWig_no_path)
+	df_phastCons_all.columns=list(fields)
 	df_phastCons_all['type'] = 'all'
 
 	# Drop first row
 	df_phastCons_all = df_phastCons_all.iloc[1:]
 
 
-	frames = [df_pos, df_phastCons_all]
+	frames = [df_pos_cons, df_phastCons_all]
 	df = pd.concat(frames,sort=False)
 	
-	df.boxplot(by='type',column=list(BigWig_no_path), grid = False,figsize=(12,9))
+	
+	
+	df.boxplot(by='type',column=list(fields), grid = False,figsize=(12,9))
 	
 	pdf_out = 'plot_NORAD/' + name + '_boxplot.pdf'
 	plt.savefig(pdf_out, dpi=800)
-	
 	plt.clf()
+	
+	save = 'out_NORAD/' + name + '_boxplot.csv'
+	df.to_csv(save,index=False)
+	
+def plot_box_plot_final_field(df_pos,df_neg,name,fields):
+	
+	# Figure
+	sns.set_style("whitegrid") 
+	
+	
+	# ~ print("pos",df_pos)
+	# ~ print("neg",df_neg)
+	
+	####
+	## PhastCons 
+	
+	# Set values for phastCons and phyloP
+	df_pos_cons = df_pos[fields]
+	df_pos_cons['type'] = 'NRU_patt'
+
+	# Set values for phastCons and phyloP
+	# ~ df_neg = df_neg.T
+	df_neg = df_neg[fields]
+	df_neg['type'] = 'NRU_rest'
+
+	# Drop first row
+	df_neg = df_neg.iloc[1:]
+
+	frames = [df_pos_cons, df_neg]
+	df = pd.concat(frames,sort=False)
+	df.boxplot(by='type',column=list(fields), grid = False,figsize=(12,9))
+	
+	pdf_out = 'plot_NORAD/' + name + '_boxplot.pdf'
+	plt.savefig(pdf_out, dpi=800)
+	plt.clf()
+	
+	save = 'out_NORAD/' + name + '_boxplot.csv'
+	df.to_csv(save,index=False)
+
 
 
 def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, reverse, chrSt, chrEnd,BigWigFile_list):
@@ -231,6 +281,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 	####################
 	
 	data_all_units_positive = []
+	data_all_units_negative = []
 	
 	with open(input_fasta) as fp:
 		line = fp.readline()
@@ -432,7 +483,6 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 					df_positive = final_df[final_df.columns.intersection(positive_col)]
 					df_negative = final_df[final_df.columns.intersection(negative_col)]
 					
-					
 					MOLECULE_pos = MOLECULE + "_" + pattern
 					MOLECULE_neg = MOLECULE + "_NO_" + pattern
 					plot_correlation_matrix(df_positive,MOLECULE_pos)
@@ -443,17 +493,31 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 					# Save to csv # Only pattern positions
 					csv_file = "out_NORAD" + "/"  +  MOLECULE_pos + ".csv" 
 					df_positive.to_csv(csv_file)
-					
 					df_positive = df_positive.T
-					
-
-
-					df_positive = df_positive[BigWig_no_path]
 
 					data_all_units_positive.append(df_positive)
-					
+						
+					# TODO: Check this
+					k=1
+					# Rename columns
+					df_negative.columns = np.arange(k,len(df_negative.columns)+1)
+					k = k+len(df_negative.columns)
 
+					
+					
+					# ~ df_phastCons[BigWigFile].index = list(NORAD_score_df.index)
+					# ~ df_phastCons[BigWigFile].columns=idx
+					df_negative = df_negative.T
+					data_all_units_negative.append(df_negative)
+					
+					
+					MOLECULE_stdev = MOLECULE + "_stdev_" + pattern
+					field = ['NRU_std']
+					df_empty = pd.DataFrame({'A' : []})
+					
+			
 					plot_box_plot(df_positive,df_negative,MOLECULE_pos,BigWig_no_path,df_phastCons_all)
+					plot_box_plot(df_positive,df_negative,MOLECULE_stdev,field,df_empty)
 			else:
 				print("No pattern was given")
 			
@@ -461,10 +525,34 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			# ~ return
 			
 			line = fp.readline()
-		df_all_units_positive = pd.concat(data_all_units_positive)
-		name = "all_" + pattern 
-
+		
+		# Rename columns
+		k = 0
+		p = 0
+		for dup in data_all_units_positive:
+			
+			p = k + len(dup.index)
+			dup.index = np.arange(k,p)
+			k = k + p
+		
+		# Rename columns
+		k = 0
+		p = 0
+		for dup in data_all_units_negative:
+			
+			p = k + len(dup.index)
+			dup.index = np.arange(k,p)
+			k = k + p
+		
+		df_all_units_positive = pd.concat(data_all_units_positive,sort=False)
+		df_all_units_negative = pd.concat(data_all_units_negative,sort=False)
+		
+		name = "all_cons_" + pattern 
 		plot_box_plot_final(df_all_units_positive,df_phastCons_all,name,BigWig_no_path)
+		
+		name = "all_stdev_" + pattern 
+		field = ['NRU_std']
+		plot_box_plot_final_field(df_all_units_positive,df_all_units_negative,name,field)
 
 
 temperatures = (23,37,55)
@@ -507,9 +595,9 @@ name = 'NORAD'
 
 # ~ pattern = '' # Default
 # ~ pattern = 'TAAA' # Sam68
-# ~ pattern = 'AATATCTAG' # STEM NRU5 and NRU6
 # ~ pattern = 'TGT[AG]TATA' # Pum site UGURUAUA (R = A/G)
-pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
+pattern = 'AATATCTAG' # STEM NRU5 and NRU6
+# ~ pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
 
 
 stability_pattern(NORAD_units_fasta,temperatures,pattern,st_pos,end_pos,chrName, name, reverse, chrSt, chrEnd,BigWigFile_list)
