@@ -22,6 +22,14 @@ def get_NORAD_score(target,position,temp):
 	# Remove last position
 	return NORAD_score.iloc[:, position:position + 179]
 
+def get_NORAD_full_score(target,temp):
+	file_open = directory + "/" +  target +  "_" + str(temp) +  ".csv"
+
+	NORAD  = pd.read_csv(file_open,sep=';',header=None,index_col = 0) 
+
+	# Remove last position
+	return NORAD
+
 def get_UNIT_score(MOLECULE,temp):
 
 	file_open = directory + "/" +  MOLECULE +  "." + str(temp) +  ".csv"
@@ -94,7 +102,7 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	# Figure
 	sns.set_style("whitegrid") 
 	
-	df_pos['type'] = 'NRU_patt'
+	df_pos['type'] = 'NRU_pattern'
 	
 	df_neg = df_neg
 	df_neg['type'] = 'NRU_rest'
@@ -103,7 +111,7 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	if not (df_phastCons_all.empty):
 		df_phastCons_all = df_phastCons_all.T
 		df_phastCons_all.columns=list(BigWigFile_list)
-		df_phastCons_all['type'] = 'all'
+		df_phastCons_all['type'] = 'whole_NORAD'
 		# Drop first row
 		df_phastCons_all = df_phastCons_all.iloc[1:]
 		
@@ -132,13 +140,13 @@ def plot_box_plot_final(df_pos,df_phastCons_all,name,fields):
 	
 	# Set values for phastCons and phyloP
 	df_pos_cons = df_pos[fields]
-	df_pos_cons['type'] = 'NRU_patt'
+	df_pos_cons['type'] = 'NRU_pattern'
 	
 
 	# Set values for phastCons and phyloP
 	df_phastCons_all = df_phastCons_all.T
 	df_phastCons_all.columns=list(fields)
-	df_phastCons_all['type'] = 'all'
+	df_phastCons_all['type'] = 'whole_NORAD'
 
 	# Drop first row
 	df_phastCons_all = df_phastCons_all.iloc[1:]
@@ -158,7 +166,7 @@ def plot_box_plot_final(df_pos,df_phastCons_all,name,fields):
 	save = dir_pattern_csv + name + '_boxplot.csv'
 	df.to_csv(save,index=False)
 	
-def plot_box_plot_final_field(df_pos,df_neg,name,fields):
+def plot_box_plot_final_field(df_pos,df_neg,whole_NORAD_df_temp,name,fields):
 	
 	# Figure
 	sns.set_style("whitegrid") 
@@ -169,17 +177,21 @@ def plot_box_plot_final_field(df_pos,df_neg,name,fields):
 	
 	# Set values for phastCons and phyloP
 	df_pos_cons = df_pos[fields]
-	df_pos_cons['type'] = 'NRU_patt'
+	df_pos_cons['type'] = 'NRU_pattern'
 
-	# Set values for phastCons and phyloP
+	
 	# ~ df_neg = df_neg.T
 	df_neg = df_neg[fields]
 	df_neg['type'] = 'NRU_rest'
 
 	# Drop first row
 	df_neg = df_neg.iloc[1:]
+	
+	# Set value for norad
+	whole_NORAD_df_temp = whole_NORAD_df_temp[fields]
+	whole_NORAD_df_temp['type'] = 'whole_NORAD'
 
-	frames = [df_pos_cons, df_neg]
+	frames = [df_pos_cons, df_neg,whole_NORAD_df_temp]
 	df = pd.concat(frames,sort=False)
 	df.boxplot(by='type',column=list(fields), grid = False,figsize=(12,9))
 	
@@ -190,8 +202,29 @@ def plot_box_plot_final_field(df_pos,df_neg,name,fields):
 	save = dir_pattern_csv + name + '_boxplot.csv'
 	df.to_csv(save,index=False)
 
+def get_full_NORAD(temp):
+	new_name = 'NORAD_' + str(temp)
+	NORAD_full_1 = get_NORAD_full_score(NORADS_NAME[0],temp)
+	len_NORAD_full_1 = len(NORAD_full_1.columns)
+	NORAD_full_1.columns = np.arange(1,len_NORAD_full_1+1)
+	NORAD_full_1.rename(index={ NORAD_full_1.index[0]: new_name },inplace=True)
 
 
+	NORAD_full_2 = get_NORAD_full_score(NORADS_NAME[1],temp)
+	len_NORAD_full_2 = len_NORAD_full_1 + len(NORAD_full_2.columns)
+	NORAD_full_2.columns = np.arange(len_NORAD_full_1,len_NORAD_full_2)
+	NORAD_full_2.rename(index={ NORAD_full_2.index[0]: new_name },inplace=True)
+
+	
+	NORAD_full_3 = get_NORAD_full_score(NORADS_NAME[2],temp)
+	len_NORAD_full_3 = len_NORAD_full_2+ len(NORAD_full_3.columns)
+	NORAD_full_3.columns = np.arange(len_NORAD_full_2,len_NORAD_full_3)
+	NORAD_full_3.rename(index={ NORAD_full_3.index[0]: new_name },inplace=True)
+
+	frames = [NORAD_full_1.T,NORAD_full_2.T,NORAD_full_3.T]
+	df_temp = pd.concat(frames)
+	return df_temp
+	
 def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, reverse, chrSt, chrEnd,BigWigFile_list):
 		
 	####################
@@ -296,6 +329,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			
 			frames = [NORAD_score_df_first, NORAD_score_df_second,NORAD_score_df_third ]
 			df = pd.concat(frames)
+			
 
 			df = df.iloc[:, st_pos:end_pos]
 			df=df.T
@@ -308,6 +342,11 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			df_temp = NORAD_score_df
 			NORAD_score_df['NORAD_avg'] = df_temp.mean(axis=1)
 			NORAD_score_df['NORAD_std'] = df_temp.std(axis=1)
+			
+			####################
+			# Full NORAD (5 6 and 7)
+			####################
+			
 			
 			######################
 			# Processing phastCons
@@ -465,6 +504,22 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			
 			line = fp.readline()
 		
+		
+		# Get full NORAD and Reindex
+
+		df_temp1 = get_full_NORAD(temp1)
+		df_temp2 = get_full_NORAD(temp2)
+		df_temp3 = get_full_NORAD(temp3)
+		frames = [df_temp1.T,df_temp2.T,df_temp3.T]
+		
+		whole_NORAD_df_temp = pd.concat(frames)
+		whole_NORAD_df_temp = whole_NORAD_df_temp.T
+				
+		# Get dataframe and calculate mean and stdev
+		# I call it NRU_std but in fact is whole_NRU but i need this name for the boxplot
+		whole_NORAD_df_temp['NRU_avg'] = whole_NORAD_df_temp.mean(axis=1)
+		whole_NORAD_df_temp['NRU_std'] = whole_NORAD_df_temp.std(axis=1)
+		
 		# Rename columns
 		k = 0
 		p = 0
@@ -492,7 +547,12 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 		
 		name = "all_stdev_" + pattern 
 		field = ['NRU_std']
-		plot_box_plot_final_field(df_all_units_positive,df_all_units_negative,name,field)
+		
+		df_all_units_positive.to_csv('positive',index=False)
+		df_all_units_negative.to_csv('negative',index=False)
+		
+		# df_all_units_positive and df_all_units_negative are shifted but i don't care because then i'll keep only NORAD_std
+		plot_box_plot_final_field(df_all_units_positive,df_all_units_negative,whole_NORAD_df_temp,name,field)
 		
 		# Plot correlation altogether
 		for dup in data_all_units_positive_corrected:
@@ -552,11 +612,11 @@ reverse = 1
 name = 'NORAD'
 
 # ~ pattern = '' # Default
-# ~ pattern = 'TAAA' # Sam68
+pattern = 'TAAA' # Sam68
 # ~ pattern = 'TGT[AG]TATA' # Pum site UGURUAUA (R = A/G)
 # ~ pattern = 'AATATCTAG' # STEM NRU5 and NRU6
 # ~ pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
-pattern = 'TAGA' # RANDOM motif
+# ~ pattern = 'TAGA' # RANDOM motif
 
 
 # Define directories
