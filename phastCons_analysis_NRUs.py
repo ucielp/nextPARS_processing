@@ -121,70 +121,6 @@ def plot_box_plot(df_pos,df_neg,MOLECULE,BigWigFile_list,df_phastCons_all):
 	plt.clf()
 	
 	
-	# TODO: Check this
-	# Plot with statistics
-	# ~ frames = [df_pos, df_phastCons_all]
-	# ~ df = pd.concat(frames,sort=False)
-
-	# Plot with Statistics
-	# ~ from scipy import stats
-
-	# ~ df_long = pd.melt(df, 'type', var_name='Feature', value_name='Value')
-	# ~ all_t = list()
-	# ~ all_p = list()
-
-	# ~ for case in range(len(BigWigFile_list)):
-		# ~ sub_df = df_long[df_long.Feature == BigWigFile_list[ca471se]]
-		# ~ g1 = sub_df[sub_df['type'] == 'NRU_patt']['Value'].values
-		# ~ g2 = sub_df[sub_df['type'] == 'all']['Value'].values
-		
-		# ~ # Calculate the T-test for the means of two independent samples of scores.
-		# ~ t, p = stats.ttest_ind(g1, g2)
-		# ~ all_t.append(t)
-		# ~ all_p.append(p)
-	# ~ # If the t-value is positive (>0) then the mean of g1 (group 1: NRU_patt) was significantly greater than the mean of g2 (group 2: all).
-	# ~ # If the t-value is negative (<0) then the mean of g1 (group 1: NRU_patt) was significantly smaller than the mean of g2 (group 2: all).
-	# ~ print(all_t)
-	# ~ print(all_p)
-	# ~ # We can see that there is a statistically significant difference in all 4 features between NRU_patt and all.
-	# ~ x = np.count_nonzero(np.array(BigWigFile_list)[np.array(all_p) < 0.05])
-	# ~ print("Therer are ", x , " test that are statistically significant different" )
-	
-	# ~ # And now the plot
-	# ~ # renaming so that class 0 will appear as ...
-	# ~ df_long.loc[df_long.type==0, 'type'] = BigWigFile_list[0]
-	# ~ df_long.loc[df_long.type==1, 'type'] = BigWigFile_list[1]
-	# ~ df_long.loc[df_long.type==2, 'type'] = BigWigFile_list[2]
-	# ~ df_long.loc[df_long.type==3, 'type'] = BigWigFile_list[3]
-	# ~ df_long.loc[df_long.type==4, 'type'] = BigWigFile_list[4]
-
-	# ~ # Boxplots
-	# ~ fig, axes = plt.subplots(2,3, figsize=(14,10), dpi=100)
-	# ~ axes = axes.flatten()
-
-	# ~ for idx, feature in enumerate(BigWigFile_list):
-		# ~ ax = sns.boxplot(x="Feature", hue="type", y="Value", data = df_long[df_long.Feature == feature], linewidth=2, showmeans=True, meanprops={"marker":"*","markerfacecolor":"white", "markeredgecolor":"black"}, ax=axes[idx])
-		# ~ #* tick params
-		# ~ axes[idx].set_xticklabels([str(feature)], rotation=0)
-		# ~ axes[idx].set(xlabel=None)
-		# ~ axes[idx].set(ylabel=None)
-		# ~ axes[idx].grid(alpha=0.5)
-		# ~ axes[idx].legend(loc="lower right", prop={'size': 11})
-	 
-		# ~ #*set edge color = black
-		# ~ for b in range(len(ax.artists)):
-			# ~ ax.artists[b].set_edgecolor('black')
-			# ~ ax.artists[b].set_alpha(0.8)
-	   
-		# ~ #* statistical tests
-		# ~ x1, x2 = -0.20, 0.20
-		# ~ y, h, col = df_long[df_long.Feature == feature]["Value"].max()+1, 2, 'k'
-		# ~ axes[idx].plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=1.5, c=col)
-		# ~ axes[idx].text((x1+x2)*.5, y+h, "statistically significant", ha='center', va='bottom', color=col)
-	# ~ fig.suptitle("Significant feature differences between setosa and versicolor classes/groups", size=14, y=0.93)
-	# ~ plt.show()
-		
-
 def plot_box_plot_final(df_pos,df_phastCons_all,name,fields):
 	
 	# Figure
@@ -616,10 +552,11 @@ reverse = 1
 name = 'NORAD'
 
 # ~ pattern = '' # Default
-pattern = 'TAAA' # Sam68
+# ~ pattern = 'TAAA' # Sam68
 # ~ pattern = 'TGT[AG]TATA' # Pum site UGURUAUA (R = A/G)
 # ~ pattern = 'AATATCTAG' # STEM NRU5 and NRU6
 # ~ pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
+pattern = 'TAGA' # RANDOM motif
 
 
 # Define directories
