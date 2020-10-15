@@ -58,7 +58,7 @@ def convertphastConsToTab(name,reverse, chrName, chrSt, chrEnd,BigWig_file):
 
 
 def plot_correlation_matrix(dataframe,MOLECULE):
-	# ~ sns.set_theme(style="white")
+	
 	sns.set(style="white")
 	
 	# Compute the correlation matrix
@@ -281,6 +281,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 	####################
 	
 	data_all_units_positive = []
+	data_all_units_positive_corrected = []
 	data_all_units_negative = []
 	
 	with open(input_fasta) as fp:
@@ -481,6 +482,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 					negative_col = list(set(all_col) - set(positive_col))
 					
 					df_positive = final_df[final_df.columns.intersection(positive_col)]
+					df_positive_corrected = final_df[final_df.columns.intersection(positive_col)]
 					df_negative = final_df[final_df.columns.intersection(negative_col)]
 					
 					MOLECULE_pos = MOLECULE + "_" + pattern
@@ -496,6 +498,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 					df_positive = df_positive.T
 
 					data_all_units_positive.append(df_positive)
+					data_all_units_positive_corrected.append(df_positive)
 						
 					# TODO: Check this
 					k=1
@@ -545,6 +548,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 			k = k + p
 		
 		df_all_units_positive = pd.concat(data_all_units_positive,sort=False)
+		df_all_units_positive_corrected = pd.concat(data_all_units_positive,sort=False)
 		df_all_units_negative = pd.concat(data_all_units_negative,sort=False)
 		
 		name = "all_cons_" + pattern 
@@ -553,7 +557,20 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 		name = "all_stdev_" + pattern 
 		field = ['NRU_std']
 		plot_box_plot_final_field(df_all_units_positive,df_all_units_negative,name,field)
+		
+		# Plot correlation altogether
+		for dup in data_all_units_positive_corrected:
+			dup.rename(columns={ dup.columns[5]: "NRU_23" },inplace=True)
+			dup.rename(columns={ dup.columns[6]: "NRU_37" },inplace=True)
+			dup.rename(columns={ dup.columns[7]: "NRU_55" },inplace=True)
+			print(dup)
+		
 
+		df_all_units_positive_corrected  = pd.concat(data_all_units_positive_corrected,sort=False)
+		df_all_units_positive_corrected = df_all_units_positive_corrected.drop(labels='type', axis=1) # axis 1 drops columns, 0 will drop rows that match index value in labels
+
+		name = "all_cons_" + pattern 
+		plot_correlation_matrix(df_all_units_positive_corrected.T,name)
 
 temperatures = (23,37,55)
 directory = 'data_NORAD'
@@ -594,9 +611,9 @@ reverse = 1
 name = 'NORAD'
 
 # ~ pattern = '' # Default
-# ~ pattern = 'TAAA' # Sam68
+pattern = 'TAAA' # Sam68
 # ~ pattern = 'TGT[AG]TATA' # Pum site UGURUAUA (R = A/G)
-pattern = 'AATATCTAG' # STEM NRU5 and NRU6
+# ~ pattern = 'AATATCTAG' # STEM NRU5 and NRU6
 # ~ pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
 
 
