@@ -308,6 +308,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 
 
 
+
 			####################
 			# Whole NORAD (5 6 and 7)
 			####################
@@ -397,8 +398,7 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 
 			final_df = pd.concat(frames)
 			print (final_df.T.corr())
-			
-			# TODO CHECK OUTPUT
+						
 			csv_file = dir_pattern_csv +  MOLECULE + '_' +  str(st_pos) + "_" + str(end_pos) +  "_UNIT.csv" 
 			final_df.to_csv(csv_file)
 						
@@ -414,6 +414,20 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 
 
 			plot_correlation_matrix(final_df,MOLECULE)
+			
+			# Get the abs value
+			final_df_abs = final_df.copy()
+			for index in final_df_abs.index:
+				if (not (('avg' in index) or ('std' in index) or ('phylo') in index  or ('phast') in index )):
+					new_index = index + '_abs'
+					final_df_abs.loc[new_index] = final_df_abs.T[index].abs().T
+					final_df_abs.drop(index, inplace=True)
+			
+			MOLECULE_abs = MOLECULE + '_abs'
+			plot_correlation_matrix(final_df_abs,MOLECULE_abs)
+			
+			csv_file = dir_pattern_csv +  MOLECULE_abs + '_' +  str(st_pos) + "_" + str(end_pos) +  "_UNIT.csv" 
+			final_df_abs.to_csv(csv_file)
 			
 			# Correlation by window
 			
@@ -572,7 +586,20 @@ def stability_pattern(input_fasta,temps,pattern,st_pos,end_pos,chrName, name, re
 		df_all_units_positive_corrected.to_csv(save,index=False)
 	
 		plot_correlation_matrix(df_all_units_positive_corrected.T,name)
-
+		
+		# Get the abs value
+		df_all_units_positive_corrected_abs = df_all_units_positive_corrected.T.copy()
+		for index in df_all_units_positive_corrected_abs.index:
+			if (not (('avg' in index) or ('std' in index) or ('phylo') in index  or ('phast') in index )):
+				new_index = index + '_abs'
+				df_all_units_positive_corrected_abs.loc[new_index] = df_all_units_positive_corrected_abs.T[index].abs().T
+				df_all_units_positive_corrected_abs.drop(index, inplace=True)
+		
+		name = "all_cons_abs_" + pattern 
+		save = dir_pattern_csv + "all_cons_abs_" + pattern + '.csv'
+		df_all_units_positive_corrected_abs.to_csv(save,index=False)
+		plot_correlation_matrix(df_all_units_positive_corrected_abs,name)
+		
 temperatures = (23,37,55)
 directory = 'data_NORAD'
 
@@ -593,8 +620,8 @@ NORAD_units_fasta = directory + "/NORAD_units.fasta"
 # Relative to the NRUs
 # This is the position: 45 to 134	(0 to 179 by default)
 # This is the position: 47 to 63	(PRE zone)
-# ~ st_pos = 47
-# ~ end_pos = 63
+# ~ st_pos = 44
+# ~ end_pos = 134
 st_pos = 0
 end_pos = 179
 
@@ -616,7 +643,7 @@ pattern = 'TAAA' # Sam68
 # ~ pattern = 'TGT[AG]TATA' # Pum site UGURUAUA (R = A/G)
 # ~ pattern = 'AATATCTAG' # STEM NRU5 and NRU6
 # ~ pattern = 'CTGT[GA]T[AGT][TC]' # MEME motif find by me #close to TGTATATA
-# ~ pattern = 'TAGA' # RANDOM motif
+# ~ pattern = 'TAGAT' # RANDOM motif
 
 
 # Define directories
